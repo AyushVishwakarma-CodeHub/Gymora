@@ -1,7 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://10.147.25.216:8080/api';
+  static const String baseUrl = 'https://violet-chicken-check.loca.lt/api';
 
   // Auth
   static const String login = '/auth/login';
