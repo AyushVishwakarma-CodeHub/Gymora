@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gymora-postgres
+    environment:
+      POSTGRES_DB: gymora_db
+      POSTGRES_USER: gymora_user
+      POSTGRES_PASSWORD: gymora_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gymora_user -d gymora_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gymora-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gymora-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gymora-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gymora-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gymora_db
+      DB_USERNAME: gymora_user
+      DB_PASSWORD: gymora_pass
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: gymora-super-secret-key-that-should-be-at-least-256-bits-long-for-security
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gymora-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  gymora-network:
+    driver: bridge

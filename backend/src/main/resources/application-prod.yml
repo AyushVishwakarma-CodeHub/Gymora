@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:gymora_db}
+    username: ${DB_USERNAME:gymora_user}
+    password: ${DB_PASSWORD:gymora_pass}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      timeout: 6000
+
+logging:
+  level:
+    com.gymora: INFO
+    org.springframework.security: WARN
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
