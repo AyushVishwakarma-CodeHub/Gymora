@@ -1,7 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'https://violet-chicken-check.loca.lt/api';
+  static const String baseUrl = 'https://sour-grapes-judge.loca.lt/api';
 
   // Auth
   static const String login = '/auth/login';
