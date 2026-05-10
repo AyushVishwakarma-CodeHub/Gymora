@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/gymora_db
-    username: gymora_user
-    password: gymora_pass
+    url: jdbc:postgresql://ep-tiny-pond-ao4nwbyv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_LYpz4MOGTxN3
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -12,8 +12,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       timeout: 6000
 
 logging:

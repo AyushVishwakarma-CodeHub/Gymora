@@ -140,6 +140,7 @@ public class CustomerService {
                 .heightCm(customer.getHeightCm())
                 .weightKg(customer.getWeightKg())
                 .goal(customer.getGoal())
+                .isApproved(Boolean.TRUE.equals(customer.getIsApproved()))
                 .activeMembership(activeMembership)
                 .createdAt(customer.getCreatedAt())
                 .build();

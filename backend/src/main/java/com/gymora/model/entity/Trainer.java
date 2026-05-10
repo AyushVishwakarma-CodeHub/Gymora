@@ -53,6 +53,16 @@ public class Trainer {
     @Builder.Default
     private List<DietPlan> dietPlans = new ArrayList<>();
 
+    @Column(nullable = true)
+    @Builder.Default
+    private Boolean isApproved = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String certifications;
+
+    @Column(columnDefinition = "TEXT")
+    private String socialLinks;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

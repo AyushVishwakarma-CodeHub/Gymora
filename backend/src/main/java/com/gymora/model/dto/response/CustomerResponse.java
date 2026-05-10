@@ -31,5 +31,6 @@ public class CustomerResponse {
     private BigDecimal weightKg;
     private FitnessGoal goal;
     private MembershipResponse activeMembership;
+    private Boolean isApproved;
     private LocalDateTime createdAt;
 }

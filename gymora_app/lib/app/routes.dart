@@ -9,6 +9,11 @@ import '../features/plans/presentation/screens/plans_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/trainer_dashboard/presentation/screens/trainer_dashboard_screen.dart';
 import '../features/admin_dashboard/presentation/screens/admin_dashboard_screen.dart';
+import '../features/gym_owner/presentation/screens/gym_owner_dashboard_screen.dart';
+import '../features/gym_owner/presentation/screens/gym_members_screen.dart';
+import '../features/gym_owner/presentation/screens/gym_trainers_screen.dart';
+import '../features/gym_owner/presentation/screens/subscription_screen.dart';
+import '../features/profile/presentation/screens/notifications_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -21,6 +26,11 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String trainerDashboard = '/trainer-dashboard';
   static const String adminDashboard = '/admin-dashboard';
+  static const String gymOwnerDashboard = '/gym-owner-dashboard';
+  static const String gymMembers = '/gym-members';
+  static const String gymTrainers = '/gym-trainers';
+  static const String subscription = '/subscription';
+  static const String notifications = '/notifications';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -44,6 +54,16 @@ class AppRoutes {
         return _fadeRoute(const TrainerDashboardScreen(), settings);
       case adminDashboard:
         return _fadeRoute(const AdminDashboardScreen(), settings);
+      case gymOwnerDashboard:
+        return _fadeRoute(const GymOwnerDashboardScreen(), settings);
+      case gymMembers:
+        return _slideRoute(const GymMembersScreen(), settings);
+      case gymTrainers:
+        return _slideRoute(const GymTrainersScreen(), settings);
+      case subscription:
+        return _slideRoute(const SubscriptionScreen(), settings);
+      case notifications:
+        return _slideRoute(const NotificationsScreen(), settings);
       default:
         return _fadeRoute(const SplashScreen(), settings);
     }

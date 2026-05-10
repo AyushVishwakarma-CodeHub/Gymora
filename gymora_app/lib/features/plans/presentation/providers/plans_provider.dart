@@ -1,6 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/session/user_session.dart';
 
 class PlansProvider extends ChangeNotifier {
+  final ApiClient _apiClient = ApiClient();
+  final UserSession _session = UserSession();
+
   bool _isLoading = false;
   int _selectedDay = DateTime.now().weekday - 1;
   List<Map<String, dynamic>> _workoutPlans = [];
@@ -20,61 +27,103 @@ class PlansProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    if (!_session.isLoaded) {
+      await _session.initialize();
+    }
 
-    _workoutPlans = [
-      {
-        'title': 'Chest & Triceps',
-        'exercises': [
-          {'name': 'Bench Press', 'sets': '4x12', 'rest': '90s'},
-          {'name': 'Incline Dumbbell Press', 'sets': '3x12', 'rest': '60s'},
-          {'name': 'Cable Flyes', 'sets': '3x15', 'rest': '60s'},
-          {'name': 'Tricep Pushdowns', 'sets': '3x12', 'rest': '60s'},
-          {'name': 'Overhead Tricep Extension', 'sets': '3x12', 'rest': '60s'},
-        ],
-        'duration': '55 min',
-        'difficulty': 'Intermediate',
-      },
-      {
-        'title': 'Core Workout',
-        'exercises': [
-          {'name': 'Plank Hold', 'sets': '3x60s', 'rest': '30s'},
-          {'name': 'Russian Twists', 'sets': '3x20', 'rest': '30s'},
-          {'name': 'Leg Raises', 'sets': '3x15', 'rest': '30s'},
-        ],
-        'duration': '25 min',
-        'difficulty': 'Beginner',
-      },
-    ];
-
-    _dietPlans = [
-      {
-        'meal': 'Breakfast',
-        'time': '8:00 AM',
-        'items': ['Oatmeal with berries', 'Protein shake', '2 boiled eggs'],
-        'calories': 450,
-      },
-      {
-        'meal': 'Lunch',
-        'time': '1:00 PM',
-        'items': ['Grilled chicken breast', 'Brown rice', 'Mixed vegetables'],
-        'calories': 650,
-      },
-      {
-        'meal': 'Snack',
-        'time': '4:00 PM',
-        'items': ['Greek yogurt', 'Almonds', 'Apple'],
-        'calories': 250,
-      },
-      {
-        'meal': 'Dinner',
-        'time': '7:30 PM',
-        'items': ['Salmon fillet', 'Quinoa', 'Steamed broccoli'],
-        'calories': 550,
-      },
-    ];
+    await Future.wait([
+      _loadWorkoutPlans(),
+      _loadDietPlans(),
+    ]);
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _loadWorkoutPlans() async {
+    final cId = _session.customerId;
+    if (cId == null) { _workoutPlans = []; return; }
+
+    try {
+      final response = await _apiClient.dio.get(
+        '${ApiConstants.workoutPlans}/customer/$cId/active',
+      );
+      if (response.statusCode == 200 && response.data['success']) {
+        final data = response.data['data'] as List?;
+        if (data != null && data.isNotEmpty) {
+          _workoutPlans = data.map<Map<String, dynamic>>((plan) {
+            List<Map<String, dynamic>> exercises = [];
+            final exercisesRaw = plan['exercises'];
+            if (exercisesRaw is String && exercisesRaw.isNotEmpty) {
+              try {
+                final parsed = jsonDecode(exercisesRaw) as List;
+                exercises = parsed.map<Map<String, dynamic>>((e) => {
+                  'name': e['name'] ?? '',
+                  'sets': e['sets'] ?? '',
+                  'rest': e['rest'] ?? '60s',
+                }).toList();
+              } catch (_) {}
+            }
+
+            return {
+              'title': plan['title'] ?? 'Workout Plan',
+              'exercises': exercises,
+              'duration': plan['description'] ?? '',
+              'difficulty': (plan['planType'] ?? 'WEEKLY').toString(),
+              'trainerName': plan['trainerName'] ?? 'Your Trainer',
+            };
+          }).toList();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading workout plans: $e');
+    }
+    _workoutPlans = [];
+  }
+
+  Future<void> _loadDietPlans() async {
+    final cId = _session.customerId;
+    if (cId == null) { _dietPlans = []; return; }
+
+    try {
+      final response = await _apiClient.dio.get(
+        '${ApiConstants.dietPlans}/customer/$cId/active',
+      );
+      if (response.statusCode == 200 && response.data['success']) {
+        final data = response.data['data'] as List?;
+        if (data != null && data.isNotEmpty) {
+          final List<Map<String, dynamic>> allMeals = [];
+          for (final plan in data) {
+            final mealsRaw = plan['meals'];
+            if (mealsRaw is String && mealsRaw.isNotEmpty) {
+              try {
+                final parsed = jsonDecode(mealsRaw) as List;
+                for (final m in parsed) {
+                  allMeals.add({
+                    'meal': m['meal'] ?? 'Meal',
+                    'time': m['time'] ?? '',
+                    'items': (m['items'] as List?)?.cast<String>() ?? <String>[],
+                    'calories': m['cal'] ?? 0,
+                  });
+                }
+              } catch (_) {}
+            } else {
+              allMeals.add({
+                'meal': plan['title'] ?? 'Diet Plan',
+                'time': plan['description'] ?? '',
+                'items': <String>[],
+                'calories': plan['targetCalories'] ?? 0,
+              });
+            }
+          }
+          _dietPlans = allMeals;
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading diet plans: $e');
+    }
+    _dietPlans = [];
   }
 }

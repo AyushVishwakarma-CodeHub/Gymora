@@ -23,7 +23,10 @@ public class TrainerResponse {
     private String specialization;
     private Integer experienceYears;
     private String bio;
+    private String certifications;
+    private String socialLinks;
     private Boolean isActive;
+    private Boolean isApproved;
     private Integer customerCount;
     private LocalDateTime createdAt;
 }

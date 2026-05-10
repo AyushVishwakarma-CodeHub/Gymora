@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/session/user_session.dart';
 
 enum AuthState { initial, loading, authenticated, unauthenticated, error }
 
 class AuthProvider extends ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
+  final UserSession _session = UserSession();
 
   AuthState _state = AuthState.initial;
   Map<String, dynamic>? _user;
@@ -17,6 +19,10 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _state == AuthState.authenticated;
   String get userRole => _user?['role'] ?? 'CUSTOMER';
+  bool get isCustomer => userRole == 'CUSTOMER';
+  bool get isTrainer => userRole == 'TRAINER';
+  bool get isGymAdmin => userRole == 'GYM_ADMIN';
+  bool get isSuperAdmin => userRole == 'SUPER_ADMIN';
 
   Future<void> checkAuthStatus() async {
     try {
@@ -27,10 +33,14 @@ class AuthProvider extends ChangeNotifier {
         return;
       }
 
+      // Restore session from token
       final response = await _apiClient.dio.get(ApiConstants.currentUser);
       if (response.statusCode == 200 && response.data['success']) {
         _user = response.data['data'];
         _state = AuthState.authenticated;
+
+        // Initialize session in background
+        await _session.initialize();
       } else {
         _state = AuthState.unauthenticated;
       }
@@ -57,6 +67,10 @@ class AuthProvider extends ChangeNotifier {
         _user = data['user'];
         _state = AuthState.authenticated;
         notifyListeners();
+
+        // Initialize UserSession (resolves customerId/trainerId)
+        await _session.initialize();
+
         return true;
       } else {
         _errorMessage = response.data['message'] ?? 'Login failed';
@@ -72,8 +86,20 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String fullName, String email, String password,
-      String phone, String role) async {
+  Future<bool> register({
+    required String fullName,
+    required String email,
+    required String password,
+    String? phone,
+    required String role,
+    int? gymId,
+    String? specialization,
+    int? experienceYears,
+    String? bio,
+    String? address,
+    String? certifications,
+    String? socialLinks,
+  }) async {
     _state = AuthState.loading;
     _errorMessage = null;
     notifyListeners();
@@ -87,6 +113,13 @@ class AuthProvider extends ChangeNotifier {
           'password': password,
           'phone': phone,
           'role': role,
+          'gymId': gymId,
+          'specialization': specialization,
+          'experienceYears': experienceYears,
+          'bio': bio,
+          'address': address,
+          'certifications': certifications,
+          'socialLinks': socialLinks,
         },
       );
 
@@ -96,6 +129,10 @@ class AuthProvider extends ChangeNotifier {
         _user = data['user'];
         _state = AuthState.authenticated;
         notifyListeners();
+
+        // Initialize session
+        await _session.initialize();
+
         return true;
       } else {
         _errorMessage = response.data['message'] ?? 'Registration failed';
@@ -113,6 +150,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await _apiClient.clearTokens();
+    _session.clear();
     _user = null;
     _state = AuthState.unauthenticated;
     notifyListeners();

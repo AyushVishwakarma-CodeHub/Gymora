@@ -87,7 +87,10 @@ public class TrainerService {
                 .specialization(trainer.getSpecialization())
                 .experienceYears(trainer.getExperienceYears())
                 .bio(trainer.getBio())
+                .certifications(trainer.getCertifications())
+                .socialLinks(trainer.getSocialLinks())
                 .isActive(trainer.getIsActive())
+                .isApproved(Boolean.TRUE.equals(trainer.getIsApproved()))
                 .customerCount(trainer.getCustomers() != null ? trainer.getCustomers().size() : 0)
                 .createdAt(trainer.getCreatedAt())
                 .build();

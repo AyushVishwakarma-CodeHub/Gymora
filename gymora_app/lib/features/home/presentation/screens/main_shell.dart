@@ -7,7 +7,11 @@ import '../../../activity/presentation/screens/activity_screen.dart';
 import '../../../plans/presentation/screens/plans_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../admin_dashboard/presentation/screens/admin_dashboard_screen.dart';
+import '../../../admin_dashboard/presentation/screens/gym_management_screen.dart';
+import '../../../admin_dashboard/presentation/screens/trainer_management_screen.dart';
 import '../../../trainer_dashboard/presentation/screens/trainer_dashboard_screen.dart';
+import '../../../gym_owner/presentation/screens/gym_owner_dashboard_screen.dart';
+import '../../../gym_owner/presentation/screens/gym_trainers_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -21,18 +25,22 @@ class _MainShellState extends State<MainShell> {
 
   // Define screens and nav items dynamically based on role
   List<Widget> _getScreens(String role) {
-    if (role == 'SUPER_ADMIN' || role == 'GYM_ADMIN') {
+    if (role == 'SUPER_ADMIN') {
       return const [
         AdminDashboardScreen(),
-        Center(child: Text('Gyms Management (Coming Soon)', style: TextStyle(color: Colors.white))),
-        Center(child: Text('Trainers Management (Coming Soon)', style: TextStyle(color: Colors.white))),
+        GymManagementScreen(),
+        TrainerManagementScreen(),
+        ProfileScreen(),
+      ];
+    } else if (role == 'GYM_ADMIN') {
+      return const [
+        GymOwnerDashboardScreen(),
+        GymTrainersScreen(),
         ProfileScreen(),
       ];
     } else if (role == 'TRAINER') {
       return const [
         TrainerDashboardScreen(),
-        Center(child: Text('Trainees List (Coming Soon)', style: TextStyle(color: Colors.white))),
-        Center(child: Text('Chat (Coming Soon)', style: TextStyle(color: Colors.white))),
         ProfileScreen(),
       ];
     } else {
@@ -47,18 +55,22 @@ class _MainShellState extends State<MainShell> {
   }
 
   List<Map<String, dynamic>> _getNavItems(String role) {
-    if (role == 'SUPER_ADMIN' || role == 'GYM_ADMIN') {
+    if (role == 'SUPER_ADMIN') {
       return [
         {'icon': Icons.dashboard_rounded, 'inactiveIcon': Icons.dashboard_outlined, 'label': 'Overview'},
         {'icon': Icons.fitness_center_rounded, 'inactiveIcon': Icons.fitness_center, 'label': 'Gyms'},
         {'icon': Icons.people_rounded, 'inactiveIcon': Icons.people_outline, 'label': 'Trainers'},
         {'icon': Icons.person_rounded, 'inactiveIcon': Icons.person_outline_rounded, 'label': 'Profile'},
       ];
+    } else if (role == 'GYM_ADMIN') {
+      return [
+        {'icon': Icons.dashboard_rounded, 'inactiveIcon': Icons.dashboard_outlined, 'label': 'Overview'},
+        {'icon': Icons.people_rounded, 'inactiveIcon': Icons.people_outline, 'label': 'Trainers'},
+        {'icon': Icons.person_rounded, 'inactiveIcon': Icons.person_outline_rounded, 'label': 'Profile'},
+      ];
     } else if (role == 'TRAINER') {
       return [
         {'icon': Icons.dashboard_rounded, 'inactiveIcon': Icons.dashboard_outlined, 'label': 'Dashboard'},
-        {'icon': Icons.directions_run_rounded, 'inactiveIcon': Icons.directions_run_outlined, 'label': 'Trainees'},
-        {'icon': Icons.chat_bubble_rounded, 'inactiveIcon': Icons.chat_bubble_outline_rounded, 'label': 'Chat'},
         {'icon': Icons.person_rounded, 'inactiveIcon': Icons.person_outline_rounded, 'label': 'Profile'},
       ];
     } else {

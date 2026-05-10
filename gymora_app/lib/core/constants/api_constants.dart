@@ -1,7 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://10.246.240.216:8080/api';
+  static const String baseUrl = 'http://localhost:8080/api';
 
   // Auth
   static const String login = '/auth/login';
@@ -14,6 +14,7 @@ class ApiConstants {
 
   // Gyms
   static const String gyms = '/gyms';
+  static const String activeGyms = '/gyms/active';
 
   // Trainers
   static const String trainers = '/trainers';

@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/session/user_session.dart';
 
 class ActivityProvider extends ChangeNotifier {
+  final ApiClient _apiClient = ApiClient();
+  final UserSession _session = UserSession();
+
   bool _isLoading = false;
   int _selectedTab = 0;
   List<Map<String, dynamic>> _weightHistory = [];
@@ -20,20 +26,90 @@ class ActivityProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    if (!_session.isLoaded) {
+      await _session.initialize();
+    }
 
-    _weightHistory = List.generate(30, (i) => {
-      'date': DateTime.now().subtract(Duration(days: 30 - i)).toIso8601String(),
-      'weight': 75.0 - (i * 0.15) + (i % 3 == 0 ? 0.2 : -0.1),
-    });
-
-    _calorieHistory = List.generate(7, (i) => {
-      'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
-      'consumed': [2100, 1950, 2300, 2050, 1800, 2400, 2000][i],
-      'burned': [350, 420, 280, 500, 380, 200, 450][i],
-    });
+    await Future.wait([
+      _loadWeightHistory(),
+      _loadCalorieHistory(),
+    ]);
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _loadWeightHistory() async {
+    final cId = _session.customerId;
+    if (cId == null) { _weightHistory = []; return; }
+
+    try {
+      final now = DateTime.now();
+      final startDate = now.subtract(const Duration(days: 30));
+      final response = await _apiClient.dio.get(
+        '${ApiConstants.activityLogs}/customer/$cId/range',
+        queryParameters: {
+          'startDate': _formatDateParam(startDate),
+          'endDate': _formatDateParam(now),
+        },
+      );
+      if (response.statusCode == 200 && response.data['success']) {
+        final data = response.data['data'] as List?;
+        if (data != null && data.isNotEmpty) {
+          _weightHistory = data
+              .where((log) => log['weightKg'] != null)
+              .map<Map<String, dynamic>>((log) => {
+                'date': log['logDate'] ?? '',
+                'weight': (log['weightKg'] as num).toDouble(),
+              })
+              .toList();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading weight history: $e');
+    }
+    _weightHistory = [];
+  }
+
+  Future<void> _loadCalorieHistory() async {
+    final cId = _session.customerId;
+    if (cId == null) { _calorieHistory = []; return; }
+
+    try {
+      final now = DateTime.now();
+      // Last 7 days for weekly view
+      final startDate = now.subtract(const Duration(days: 6));
+      final response = await _apiClient.dio.get(
+        '${ApiConstants.activityLogs}/customer/$cId/range',
+        queryParameters: {
+          'startDate': _formatDateParam(startDate),
+          'endDate': _formatDateParam(now),
+        },
+      );
+      if (response.statusCode == 200 && response.data['success']) {
+        final data = response.data['data'] as List?;
+        if (data != null && data.isNotEmpty) {
+          final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+          _calorieHistory = data.map<Map<String, dynamic>>((log) {
+            final date = DateTime.tryParse(log['logDate'] ?? '');
+            final dayName = date != null ? days[date.weekday - 1] : '';
+            return {
+              'day': dayName,
+              'consumed': log['caloriesConsumed'] ?? 0,
+              'burned': log['caloriesBurned'] ?? 0,
+            };
+          }).toList();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading calorie history: $e');
+    }
+    _calorieHistory = [];
+  }
+
+  String _formatDateParam(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

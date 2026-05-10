@@ -58,6 +58,10 @@ public class Customer {
     @Builder.Default
     private List<ActivityLog> activityLogs = new ArrayList<>();
 
+    @Column(nullable = true)
+    @Builder.Default
+    private Boolean isApproved = true;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

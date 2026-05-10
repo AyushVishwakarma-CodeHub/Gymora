@@ -1,13 +1,16 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/api_constants.dart';
+import 'token_storage.dart';
+import 'token_storage_stub.dart'
+    if (dart.library.html) 'token_storage_web.dart'
+    if (dart.library.io) 'token_storage_mobile.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
 
   late final Dio dio;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final TokenStorage _tokenStorage = TokenStorageImpl();
 
   ApiClient._internal() {
     dio = Dio(BaseOptions(
@@ -22,7 +25,7 @@ class ApiClient {
 
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await _storage.read(key: 'access_token');
+        final token = await _tokenStorage.getAccessToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -30,8 +33,7 @@ class ApiClient {
       },
       onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
-          // Try refresh token
-          final refreshToken = await _storage.read(key: 'refresh_token');
+          final refreshToken = await _tokenStorage.getRefreshToken();
           if (refreshToken != null) {
             try {
               final response = await Dio().post(
@@ -40,19 +42,19 @@ class ApiClient {
               );
 
               if (response.statusCode == 200) {
-                final newToken = response.data['data']['accessToken'];
-                final newRefresh = response.data['data']['refreshToken'];
-                await _storage.write(key: 'access_token', value: newToken);
-                await _storage.write(key: 'refresh_token', value: newRefresh);
+                final data = response.data['data'];
+                await _tokenStorage.saveTokens(
+                  data['accessToken'],
+                  data['refreshToken'],
+                );
 
-                // Retry original request
-                error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+                error.requestOptions.headers['Authorization'] =
+                    'Bearer ${data['accessToken']}';
                 final retryResponse = await dio.fetch(error.requestOptions);
                 return handler.resolve(retryResponse);
               }
             } catch (_) {
-              // Refresh failed, need to re-login
-              await _storage.deleteAll();
+              await _tokenStorage.clearTokens();
             }
           }
         }
@@ -62,21 +64,18 @@ class ApiClient {
   }
 
   Future<void> saveTokens(String accessToken, String refreshToken) async {
-    await _storage.write(key: 'access_token', value: accessToken);
-    await _storage.write(key: 'refresh_token', value: refreshToken);
+    await _tokenStorage.saveTokens(accessToken, refreshToken);
   }
 
   Future<void> clearTokens() async {
-    await _storage.delete(key: 'access_token');
-    await _storage.delete(key: 'refresh_token');
+    await _tokenStorage.clearTokens();
   }
 
   Future<String?> getAccessToken() async {
-    return await _storage.read(key: 'access_token');
+    return await _tokenStorage.getAccessToken();
   }
 
   Future<bool> hasToken() async {
-    final token = await _storage.read(key: 'access_token');
-    return token != null;
+    return await _tokenStorage.hasToken();
   }
 }

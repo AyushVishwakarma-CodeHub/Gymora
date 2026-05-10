@@ -25,4 +25,13 @@ public class RegisterRequest {
 
     @NotNull(message = "Role is required")
     private Role role;
+
+    // Trainer specific fields
+    private Long gymId;
+    private String specialization;
+    private Integer experienceYears;
+    private String bio;
+    private String address;
+    private String certifications;
+    private String socialLinks;
 }

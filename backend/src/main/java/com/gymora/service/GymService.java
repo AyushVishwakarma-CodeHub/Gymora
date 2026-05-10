@@ -38,7 +38,7 @@ public class GymService {
                 .logoUrl(request.getLogoUrl())
                 .description(request.getDescription())
                 .admin(admin)
-                .status(GymStatus.PENDING)
+                .status(GymStatus.APPROVED)
                 .build();
 
         gym = gymRepository.save(gym);
