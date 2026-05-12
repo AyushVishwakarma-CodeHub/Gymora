@@ -82,6 +82,15 @@ public class DevDataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS admin_id BIGINT");
             jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS city VARCHAR(255)");
             jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS phone VARCHAR(255)");
+            // Workout Plans - fix exercises column type
+            try {
+                jdbcTemplate.execute("ALTER TABLE workout_plans ALTER COLUMN exercises TYPE jsonb USING exercises::jsonb");
+            } catch (Exception ignored) {}
+
+            // Diet Plans - fix meals column type
+            try {
+                jdbcTemplate.execute("ALTER TABLE diet_plans ALTER COLUMN meals TYPE jsonb USING meals::jsonb");
+            } catch (Exception ignored) {}
 
             System.out.println("Cloud Database Schema synced successfully!");
         } catch (Exception e) {
