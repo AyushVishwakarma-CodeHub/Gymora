@@ -1,20 +1,24 @@
 spring:
   datasource:
-    url: jdbc:postgresql://ep-tiny-pond-ao4nwbyv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-    username: neondb_owner
-    password: npg_LYpz4MOGTxN3
+    url: jdbc:postgresql://db.xvlvpqmrtxvxxzkpxhqs.supabase.co:6543/postgres?sslmode=require
+    username: postgres
+    password: Surayu@6299
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    cache:
+      type: none
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 6000
+      repositories:
+        enabled: false
+
+  session:
+    store-type: none
 
 logging:
   level:

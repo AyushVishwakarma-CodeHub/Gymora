@@ -24,6 +24,10 @@ public class DevDataInitializer implements CommandLineRunner {
         gymRepository.findAll().stream()
                 .filter(gym -> gym.getStatus() == GymStatus.PENDING)
                 .forEach(gym -> {
+                    // Fix missing address to avoid validation crash
+                    if (gym.getAddress() == null || gym.getAddress().isBlank()) {
+                        gym.setAddress("LPU Campus");
+                    }
                     gym.setStatus(GymStatus.APPROVED);
                     gymRepository.save(gym);
                 });
@@ -37,6 +41,16 @@ public class DevDataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE");
             jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN enabled SET DEFAULT TRUE");
             jdbcTemplate.execute("UPDATE users SET enabled = TRUE WHERE enabled IS NULL");
+
+            // Drop old 'password' column if it exists (we use 'password_hash' instead)
+            try {
+                jdbcTemplate.execute("ALTER TABLE users DROP COLUMN IF EXISTS password");
+            } catch (Exception ignored) {}
+
+            // Drop outdated role check constraint (friend's web app may have different role names)
+            try {
+                jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+            } catch (Exception ignored) {}
             
             jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE");
             jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN is_active SET DEFAULT TRUE");
@@ -65,6 +79,9 @@ public class DevDataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'PENDING'");
             jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS logo_url VARCHAR(255)");
             jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS description TEXT");
+            jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS admin_id BIGINT");
+            jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS city VARCHAR(255)");
+            jdbcTemplate.execute("ALTER TABLE gyms ADD COLUMN IF NOT EXISTS phone VARCHAR(255)");
 
             System.out.println("Cloud Database Schema synced successfully!");
         } catch (Exception e) {

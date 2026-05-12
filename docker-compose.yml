@@ -43,9 +43,9 @@ services:
     container_name: gymora-backend
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ep-tiny-pond-ao4nwbyv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-      SPRING_DATASOURCE_USERNAME: neondb_owner
-      SPRING_DATASOURCE_PASSWORD: npg_LYpz4MOGTxN3
+      SPRING_DATASOURCE_URL: jdbc:postgresql://[2406:da1a:82a:9d02:a7c2:475f:a3ab:6482]:6543/postgres?sslmode=require
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Surayu@6299
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       REDIS_HOST: redis
@@ -53,6 +53,8 @@ services:
       JWT_SECRET: gymora-super-secret-key-that-should-be-at-least-256-bits-long-for-security
     ports:
       - "8080:8080"
+    extra_hosts:
+      - "db.xvlvpqmrtxvxxzkpxhqs.supabase.co:2406:da1a:82a:9d02:a7c2:475f:a3ab:6482"
     depends_on:
       postgres:
         condition: service_healthy
