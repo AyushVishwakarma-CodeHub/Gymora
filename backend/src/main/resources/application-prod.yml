@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db.xvlvpqmrtxvxxzkpxhqs.supabase.co:5432/postgres?sslmode=require}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres.xvlvpqmrtxvxxzkpxhqs}
     password: ${SPRING_DATASOURCE_PASSWORD:Surayu@6299}
     hikari:
       maximum-pool-size: 10
@@ -11,11 +11,10 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         temp:
           use_jdbc_metadata_defaults: false
 
@@ -23,6 +22,11 @@ spring:
     type: none
   session:
     store-type: none
+
+  data:
+    redis:
+      repositories:
+        enabled: false
 
 logging:
   level:
