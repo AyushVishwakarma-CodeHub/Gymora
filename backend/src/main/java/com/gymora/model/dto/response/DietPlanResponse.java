@@ -22,7 +22,7 @@ public class DietPlanResponse {
     private String customerName;
     private String title;
     private String description;
-    private String meals; // JSON string
+    private Object meals; // JSON object/list
     private Integer targetCalories;
     private LocalDate startDate;
     private LocalDate endDate;

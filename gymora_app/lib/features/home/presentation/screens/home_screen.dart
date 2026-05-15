@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../providers/home_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../workout/presentation/screens/workout_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -171,13 +172,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                if (homeProvider.fullWorkoutPlan != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => WorkoutDetailsScreen(plan: homeProvider.fullWorkoutPlan!),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please wait while we load your workout...')),
+                                  );
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFF16A34A),
                                 padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                ),
                               ),
-                              child: const Text('Start Workout', style: TextStyle(fontWeight: FontWeight.w700)),
+                              child: const Text('Start Workout', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700)),
                             ),
                           ),
                         ],

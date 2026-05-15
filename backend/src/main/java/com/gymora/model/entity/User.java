@@ -37,6 +37,11 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
+    private String firstName;
+    private String lastName;
+
+    private String password; // For synchronization with friend's app
+    
     private String phone;
 
     private String avatarUrl;
@@ -52,6 +57,12 @@ public class User {
     @Builder.Default
     @Column(nullable = false)
     private Boolean isActive = true;
+
+    @Builder.Default
+    private Boolean enabled = true;
+
+    @Builder.Default
+    private Boolean isApproved = true;
 
     @CreationTimestamp
     @Column(updatable = false)

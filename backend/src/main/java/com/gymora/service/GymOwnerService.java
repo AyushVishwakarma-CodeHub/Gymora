@@ -6,16 +6,12 @@ import com.gymora.model.dto.request.RegisterRequest;
 import com.gymora.model.dto.response.CustomerResponse;
 import com.gymora.model.dto.response.TrainerResponse;
 import com.gymora.model.entity.*;
-import com.gymora.model.enums.GymStatus;
 import com.gymora.model.enums.Role;
 import com.gymora.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +40,7 @@ public class GymOwnerService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword() != null ? request.getPassword() : "123456"))
                 .phone(request.getPhone())
-                .role(Role.CUSTOMER)
+                .role(Role.MEMBER)
                 .isActive(true)
                 .build();
         user = userRepository.save(user);

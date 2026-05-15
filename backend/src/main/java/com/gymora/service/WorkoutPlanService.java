@@ -9,6 +9,7 @@ import com.gymora.model.entity.WorkoutPlan;
 import com.gymora.repository.CustomerRepository;
 import com.gymora.repository.TrainerRepository;
 import com.gymora.repository.WorkoutPlanRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class WorkoutPlanService {
     private final WorkoutPlanRepository workoutPlanRepository;
     private final TrainerRepository trainerRepository;
     private final CustomerRepository customerRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public WorkoutPlanResponse createPlan(WorkoutPlanRequest request) {
@@ -98,7 +100,7 @@ public class WorkoutPlanService {
                 .customerName(plan.getCustomer().getUser().getFullName())
                 .title(plan.getTitle())
                 .description(plan.getDescription())
-                .exercises(plan.getExercises())
+                .exercises(plan.getExercises()) // Keep as raw JSON string for Flutter jsonDecode
                 .planType(plan.getPlanType())
                 .startDate(plan.getStartDate())
                 .endDate(plan.getEndDate())

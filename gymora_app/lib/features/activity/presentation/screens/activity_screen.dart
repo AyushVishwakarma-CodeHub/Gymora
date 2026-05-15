@@ -38,23 +38,65 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.all(AppTheme.spacingLg),
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: AppTheme.spacingMd),
               child: Row(
                 children: [
-                  const Text('Activity', style: TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Activity',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      Text(
+                        'Track your progress',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accent.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.add_rounded, color: AppTheme.accent, size: 18),
-                        const SizedBox(width: 4),
-                        const Text('Log', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.accent)),
-                      ],
+                  GestureDetector(
+                    onTap: () {
+                      // Logic to open logging bottom sheet or screen
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.accentGradient,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.accent.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_rounded, color: AppTheme.primaryDark, size: 20),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Log',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryDark,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -64,21 +106,29 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
             // Tab Bar
             Container(
               margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: AppTheme.surface.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  color: AppTheme.accent,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  color: AppTheme.surfaceLight,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: AppTheme.primaryDark,
+                labelColor: AppTheme.accent,
                 unselectedLabelColor: AppTheme.textSecondary,
-                labelStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 14),
+                labelStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w700),
+                unselectedLabelStyle: const TextStyle(fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500),
                 dividerColor: Colors.transparent,
                 tabs: const [
                   Tab(text: 'Weight'),
@@ -88,12 +138,13 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Chart Area
             Expanded(
               child: TabBarView(
                 controller: _tabController,
+                physics: const BouncingScrollPhysics(),
                 children: [
                   _buildWeightChart(),
                   _buildCalorieChart(),
@@ -112,47 +163,96 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
       builder: (context, provider, _) {
         final data = provider.weightHistory;
         if (data.isEmpty) {
-          return const Center(child: Text('No weight data yet', style: TextStyle(color: AppTheme.textSecondary)));
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.monitor_weight_outlined, size: 64, color: AppTheme.surfaceLight),
+                SizedBox(height: 16),
+                Text('No weight data recorded yet', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+              ],
+            ),
+          );
         }
 
-        return Padding(
+        final currentWeight = data.last['weight'] as double;
+        final firstWeight = data.first['weight'] as double;
+        final trend = currentWeight - firstWeight;
+        final isTrendDown = trend <= 0;
+
+        // Calculate min/max for better chart scaling
+        double minWeight = data.map((e) => e['weight'] as double).reduce((a, b) => a < b ? a : b);
+        double maxWeight = data.map((e) => e['weight'] as double).reduce((a, b) => a > b ? a : b);
+        double range = maxWeight - minWeight;
+        double padding = range < 1 ? 2.0 : range * 0.2;
+        double minY = (minWeight - padding).floorToDouble();
+        double maxY = (maxWeight + padding).ceilToDouble();
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Current Weight Card
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: AppTheme.cardGradient,
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   border: Border.all(color: AppTheme.divider.withOpacity(0.5)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
                 ),
                 child: Row(
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Current Weight', style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppTheme.textSecondary)),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${(data.last['weight'] as double).toStringAsFixed(1)} kg',
-                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        const Text('Current Weight', style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 6),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: currentWeight.toStringAsFixed(1),
+                                style: const TextStyle(fontFamily: 'Poppins', fontSize: 36, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                              ),
+                              const TextSpan(
+                                text: ' kg',
+                                style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.accent.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                        color: (isTrendDown ? AppTheme.accent : AppTheme.error).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        border: Border.all(color: (isTrendDown ? AppTheme.accent : AppTheme.error).withOpacity(0.2)),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.trending_down_rounded, color: AppTheme.accent, size: 16),
-                          SizedBox(width: 4),
-                          Text('-2.5 kg', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.accent)),
+                          Icon(
+                            isTrendDown ? Icons.trending_down_rounded : Icons.trending_up_rounded,
+                            color: isTrendDown ? AppTheme.accent : AppTheme.error,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${trend > 0 ? "+" : ""}${trend.toStringAsFixed(1)} kg',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: isTrendDown ? AppTheme.accent : AppTheme.error,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -160,20 +260,33 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
                 ),
               ),
 
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('30-Day Trend', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  Text(
+                    'Last 30 days',
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 13, color: AppTheme.textTertiary),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
-              const Text('30-Day Trend', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-              const SizedBox(height: 16),
 
-              // Chart
-              SizedBox(
-                height: 200,
+              // Chart with padding for labels
+              Container(
+                height: 220,
+                width: double.infinity,
+                padding: const EdgeInsets.only(right: 16),
                 child: LineChart(
                   LineChartData(
+                    minY: minY,
+                    maxY: maxY,
                     gridData: FlGridData(
                       show: true,
                       drawVerticalLine: false,
-                      horizontalInterval: 1,
-                      getDrawingHorizontalLine: (value) => FlLine(color: AppTheme.divider.withOpacity(0.3), strokeWidth: 1),
+                      horizontalInterval: (maxY - minY) / 4,
+                      getDrawingHorizontalLine: (value) => FlLine(color: AppTheme.divider.withOpacity(0.2), strokeWidth: 1),
                     ),
                     titlesData: FlTitlesData(
                       rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -181,18 +294,32 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          interval: 7,
+                          interval: data.length > 7 ? (data.length / 4).ceilToDouble() : 1,
                           getTitlesWidget: (value, meta) {
-                            return Text('W${(value / 7).ceil()}', style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.textTertiary));
+                            int index = value.toInt();
+                            if (index >= 0 && index < data.length) {
+                              String dateStr = data[index]['date'] as String;
+                              // Just show day if it's many points
+                              try {
+                                DateTime dt = DateTime.parse(dateStr);
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text('${dt.day}/${dt.month}', style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppTheme.textTertiary)),
+                                );
+                              } catch (e) {
+                                return const Text('');
+                              }
+                            }
+                            return const Text('');
                           },
                         ),
                       ),
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          reservedSize: 40,
+                          reservedSize: 38,
                           getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}', style: const TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.textTertiary));
+                            return Text('${value.toInt()}', style: const TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppTheme.textTertiary));
                           },
                         ),
                       ),
@@ -202,27 +329,83 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
                       LineChartBarData(
                         spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), (e.value['weight'] as double))).toList(),
                         isCurved: true,
+                        curveSmoothness: 0.35,
                         color: AppTheme.accent,
-                        barWidth: 3,
+                        barWidth: 4,
                         isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                            radius: index == data.length - 1 ? 6 : 0,
+                            color: AppTheme.accent,
+                            strokeWidth: 2,
+                            strokeColor: AppTheme.primaryDark,
+                          ),
+                        ),
                         belowBarData: BarAreaData(
                           show: true,
                           gradient: LinearGradient(
-                            colors: [AppTheme.accent.withOpacity(0.3), AppTheme.accent.withOpacity(0.0)],
+                            colors: [AppTheme.accent.withOpacity(0.2), AppTheme.accent.withOpacity(0.0)],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
                         ),
                       ),
                     ],
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (spot) => AppTheme.surfaceLight,
+                        tooltipRoundedRadius: 8,
+                        getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
+                          '${s.y.toStringAsFixed(1)} kg',
+                          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        )).toList(),
+                      ),
+                    ),
                   ),
                 ),
               ),
+              
+              const SizedBox(height: 32),
+              // Quick Stats
+              Row(
+                children: [
+                  _buildQuickStat('Min', '${minWeight.toStringAsFixed(1)} kg', Icons.arrow_downward_rounded),
+                  const SizedBox(width: 16),
+                  _buildQuickStat('Max', '${maxWeight.toStringAsFixed(1)} kg', Icons.arrow_upward_rounded),
+                ],
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQuickStat(String label, String value, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.surface.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(color: AppTheme.divider.withOpacity(0.5)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppTheme.textTertiary),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontFamily: 'Inter', fontSize: 12, color: AppTheme.textTertiary)),
+                Text(value, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

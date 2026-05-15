@@ -22,7 +22,7 @@ public class WorkoutPlanResponse {
     private String customerName;
     private String title;
     private String description;
-    private String exercises; // JSON string
+    private Object exercises; // JSON object/list
     private PlanType planType;
     private LocalDate startDate;
     private LocalDate endDate;

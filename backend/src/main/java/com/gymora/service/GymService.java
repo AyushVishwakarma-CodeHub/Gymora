@@ -98,6 +98,18 @@ public class GymService {
     }
 
     private GymResponse mapToResponse(Gym gym) {
+        Long adminId = null;
+        String adminName = "Unknown";
+        
+        if (gym.getAdmin() != null) {
+            try {
+                adminId = gym.getAdmin().getId();
+                adminName = gym.getAdmin().getFullName();
+            } catch (Exception e) {
+                // Handle cases where proxy fails to load
+            }
+        }
+
         return GymResponse.builder()
                 .id(gym.getId())
                 .name(gym.getName())
@@ -107,8 +119,8 @@ public class GymService {
                 .logoUrl(gym.getLogoUrl())
                 .description(gym.getDescription())
                 .status(gym.getStatus())
-                .adminId(gym.getAdmin().getId())
-                .adminName(gym.getAdmin().getFullName())
+                .adminId(adminId)
+                .adminName(adminName)
                 .trainerCount(gym.getTrainers() != null ? gym.getTrainers().size() : 0)
                 .customerCount(gym.getCustomers() != null ? gym.getCustomers().size() : 0)
                 .createdAt(gym.getCreatedAt())

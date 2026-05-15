@@ -4,5 +4,6 @@ public enum Role {
     SUPER_ADMIN,
     GYM_ADMIN,
     TRAINER,
-    CUSTOMER
+    CUSTOMER,
+    MEMBER
 }

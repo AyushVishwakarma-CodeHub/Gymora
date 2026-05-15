@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/session/user_session.dart';
@@ -9,11 +10,13 @@ class HomeProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   Map<String, dynamic>? _todayWorkout;
+  Map<String, dynamic>? _fullWorkoutPlan;
   Map<String, dynamic>? _todayStats;
   List<Map<String, dynamic>> _recentActivities = [];
 
   bool get isLoading => _isLoading;
   Map<String, dynamic>? get todayWorkout => _todayWorkout;
+  Map<String, dynamic>? get fullWorkoutPlan => _fullWorkoutPlan;
   Map<String, dynamic>? get todayStats => _todayStats;
   List<Map<String, dynamic>> get recentActivities => _recentActivities;
 
@@ -52,23 +55,26 @@ class HomeProvider extends ChangeNotifier {
         final plans = response.data['data'] as List?;
         if (plans != null && plans.isNotEmpty) {
           final plan = plans.first;
-          // exercises is a JSON string — parse it
+          _fullWorkoutPlan = plan;
+          
           final exercisesRaw = plan['exercises'];
-          int exerciseCount = 0;
+          List parsedExercises = [];
+          
           if (exercisesRaw is String && exercisesRaw.isNotEmpty) {
             try {
-              final parsed = _parseExercises(exercisesRaw);
-              exerciseCount = parsed.length;
-            } catch (_) {}
+              parsedExercises = jsonDecode(exercisesRaw);
+            } catch (_) {
+              parsedExercises = [];
+            }
           } else if (exercisesRaw is List) {
-            exerciseCount = exercisesRaw.length;
+            parsedExercises = exercisesRaw;
           }
 
           _todayWorkout = {
             'title': plan['title'] ?? 'Workout',
-            'exercises': exerciseCount,
+            'exercises': parsedExercises.length,
             'duration': plan['description'] ?? '45 min',
-            'calories': exerciseCount * 40, // estimate
+            'calories': parsedExercises.length * 40, // estimate
           };
           return;
         }

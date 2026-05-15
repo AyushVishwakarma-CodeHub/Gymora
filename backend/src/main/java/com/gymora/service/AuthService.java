@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +69,15 @@ public class AuthService {
                     .build();
             
             trainerRepository.save(trainer);
+        } else if (request.getRole() == Role.GYM_ADMIN) {
+            // Automatically create a default gym for the new owner
+            com.gymora.model.entity.Gym gym = com.gymora.model.entity.Gym.builder()
+                    .name(user.getFullName() + "'s Gym")
+                    .address(user.getAddress() != null ? user.getAddress() : "Address Pending")
+                    .admin(user)
+                    .status(com.gymora.model.enums.GymStatus.APPROVED) // Auto-approve for demo/dev
+                    .build();
+            gymRepository.save(gym);
         }
 
         String accessToken = tokenProvider.generateAccessToken(user.getEmail());
