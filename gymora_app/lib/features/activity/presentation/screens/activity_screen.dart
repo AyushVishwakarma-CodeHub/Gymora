@@ -354,7 +354,7 @@ class _ActivityScreenState extends State<ActivityScreen> with SingleTickerProvid
                     ],
                     lineTouchData: LineTouchData(
                       touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (spot) => AppTheme.surfaceLight,
+                        tooltipBgColor: AppTheme.surfaceLight,
                         tooltipRoundedRadius: 8,
                         getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
                           '${s.y.toStringAsFixed(1)} kg',
